@@ -3,7 +3,13 @@ const config = require('../config')
 const mysql2 = require('mysql2/promise')
 const crypto = require('node:crypto')
 
-const pool = mysql2.createPool(config.database.connectionUri)
+const pool = mysql2.createPool({
+  uri: config.database.connectionUri,
+  connectionLimit: 15,
+  maxIdle: 7,
+  idleTimeout: 5000,
+  enableKeepAlive: true
+})
 
 /**
  * Получение пользователя при помощи учетных данных
@@ -122,23 +128,25 @@ async function searchUsers (userId, searchParameters, searchMyself = false) {
   const connection = await pool.getConnection()
   let query =
     'SELECT `user`.`login`, `user`.`domain`, `user`.`nick`, `user`.`f_name`, `user`.`l_name`, `user`.`location`, ' +
-    '`user`.`birthday`, `user`.`zodiac`, `user`.`phone`, `user`.`sex` ' +
+    '`user`.`birthday`, `user`.`zodiac`, `user`.`phone`, `user`.`sex`, `user`.`real_email`, `user`.`activated` ' +
     'FROM `user` WHERE '
   const variables = []
 
   if (!searchMyself) {
     query += '`user`.`id` != ? AND '
     variables.push(userId)
+  } else {
+    query += '`user`.`activated` = 1 AND '
   }
 
   if (Object.hasOwn(searchParameters, 'login')) {
-    query += '`user`.`login` LIKE ? AND '
-    variables.push(`%${searchParameters.login}%`)
+    query += '`user`.`login` = ? AND '
+    variables.push(`${searchParameters.login}`)
   }
 
   if (Object.hasOwn(searchParameters, 'domain')) {
-    query += '`user`.`domain` LIKE ? AND '
-    variables.push(`%${searchParameters.domain}%`)
+    query += '`user`.`domain` = ? AND '
+    variables.push(`${searchParameters.domain}`)
   }
 
   if (Object.hasOwn(searchParameters, 'nickname')) {

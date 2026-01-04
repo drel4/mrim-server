@@ -8,7 +8,13 @@ const mrim = {
   enabled: true,
   serverHostname: '127.0.0.1',
   serverPort: 2041,
-  offlineMessagesLimit: 20
+  offlineMessagesLimit: 20,
+  realEmailRequired: false, // for prod
+  ssl: {
+    enabled: true,
+    keyPath: './ca-key.pem',
+    certPath: './ca-cert.pem'
+  }
 }
 
 // Настройки сервера-перенаправлятора
